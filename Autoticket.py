@@ -147,11 +147,10 @@ class Concert(object):
             for item in selects:
                 if item.find_element_by_class_name('select_left').text == '场次':
                     session = item
-                    print('场次定位成功')
+                    print('\t场次定位成功')
                 elif item.find_element_by_class_name('select_left').text == '票档':
                     price = item
-                    # print(item.text)
-                    print('票档定位成功')
+                    print('\t票档定位成功')
 
             session_list = session.find_elements_by_class_name('select_right_list_item')
             print('可选场次数量为：{}'.format(len(session_list)))

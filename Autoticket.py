@@ -1,6 +1,7 @@
 # coding: utf-8
 import io
 from json import loads
+from multiprocessing import Pool, cpu_count
 from os.path import exists
 from pickle import dump, load
 from time import sleep, time
@@ -405,27 +406,22 @@ class Concert(object):
             self.driver.quit()
 
 
-if __name__ == '__main__':
-    # import datetime
-    # startTime = datetime.datetime(2019, 9, 25, 9, 17, 7)  #定时功能：2019-9-25 09:17:07秒开抢
-    # print('抢票程序还未开始...')
-    # while datetime.datetime.now() < startTime:
-    #     sleep(1)
-    # print('开始进入抢票 %s' % startTime)
-    # print('正在执行...')
+def main(abias):
+    print(abias)
     try:
         with io.open('./config.json', 'r', encoding='utf-8') as f:
             config = loads(f.read())
         # params: 场次优先级，票价优先级，日期， 实名者序号, 用户昵称， 购买票数， 官网网址， 目标网址， 浏览器
-        con = Concert(config['sess'], config['price'], config['date'], config['real_name'], config['nick_name'],
+        b = [i + abias for i in config['sess']]
+        con = Concert(b, config['price'], config['date'], config['real_name'], config['nick_name'],
                       config['ticket_num'],
                       config['damai_url'], config['target_url'], config['browser'])
     except Exception as e:
         print(e)
         raise Exception("***错误：初始化失败，请检查配置文件***")
     con.enter_concert()
-    # while True: # 可用于无限抢票，防止弹窗类异常使抢票终止
-    if True:
+    while True:  # 可用于无限抢票，防止弹窗类异常使抢票终止
+        # if True:
         try:
             if con.type == 1:  # detail.damai.cn
                 con.choose_ticket_1()
@@ -438,3 +434,24 @@ if __name__ == '__main__':
             print(e)
             con.driver.get(con.target_url)
     con.finish()
+
+
+if __name__ == '__main__':
+    # import datetime
+    # startTime = datetime.datetime(2019, 9, 25, 9, 17, 7)  #定时功能：2019-9-25 09:17:07秒开抢
+    # print('抢票程序还未开始...')
+    # while datetime.datetime.now() < startTime:
+    #     sleep(1)
+    # print('开始进入抢票 %s' % startTime)
+    # print('正在执行...')
+    cpucount = cpu_count()
+    print(cpucount)
+    p = Pool(int(cpucount * 3 / 4))
+    print('use ' + str(int(cpucount * 3 / 4)) + ' cpu')
+    for i in range(6 + 1):
+        print(i)
+        p.apply_async(main, (i,))
+    print("----start----")
+    p.close()  # 关闭进程池，关闭后po不再接收新的请求
+    p.join()  # 等待po中所有子进程执行完成，必须放在close语句之后
+    print("-----end-----")
